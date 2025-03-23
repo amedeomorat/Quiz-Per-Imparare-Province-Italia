@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gioco delle Province Italiane</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Gioco delle Province Italiane</h1>
+        </header>
+
+        <div class="region-selector">
+            <h2>Seleziona le Regioni</h2>
+            <div class="region-controls">
+                <button id="select-all" class="control-button">Seleziona Tutte</button>
+                <button id="deselect-all" class="control-button">Deseleziona Tutte</button>
+            </div>
+            <div class="region-checkboxes">
+                <label><input type="checkbox" value="Piemonte" checked> Piemonte</label>
+                <label><input type="checkbox" value="Valle d'Aosta" checked> Valle d'Aosta</label>
+                <label><input type="checkbox" value="Lombardia" checked> Lombardia</label>
+                <label><input type="checkbox" value="Trentino-Alto Adige" checked> Trentino-Alto Adige</label>
+                <label><input type="checkbox" value="Veneto" checked> Veneto</label>
+                <label><input type="checkbox" value="Friuli Venezia Giulia" checked> Friuli Venezia Giulia</label>
+                <label><input type="checkbox" value="Liguria" checked> Liguria</label>
+                <label><input type="checkbox" value="Emilia-Romagna" checked> Emilia-Romagna</label>
+                <label><input type="checkbox" value="Toscana" checked> Toscana</label>
+                <label><input type="checkbox" value="Umbria" checked> Umbria</label>
+                <label><input type="checkbox" value="Marche" checked> Marche</label>
+                <label><input type="checkbox" value="Lazio" checked> Lazio</label>
+                <label><input type="checkbox" value="Abruzzo" checked> Abruzzo</label>
+                <label><input type="checkbox" value="Molise" checked> Molise</label>
+                <label><input type="checkbox" value="Campania" checked> Campania</label>
+                <label><input type="checkbox" value="Puglia" checked> Puglia</label>
+                <label><input type="checkbox" value="Basilicata" checked> Basilicata</label>
+                <label><input type="checkbox" value="Calabria" checked> Calabria</label>
+                <label><input type="checkbox" value="Sicilia" checked> Sicilia</label>
+                <label><input type="checkbox" value="Sardegna" checked> Sardegna</label>
+            </div>
+            <div class="game-controls">
+                <button id="apply-regions" class="control-button">Applica Selezione</button>
+                <button id="start-game" class="control-button start-button">Inizia Gioco</button>
+            </div>
+        </div>
+
+        <div class="game-container">
+            <div class="game-header">
+                <div class="game-info">
+                    <div>Provincia da indovinare: <span id="province-name"></span></div>
+                    <div>Tentativi rimasti: <span id="attempts-count">3</span></div>
+                    <div>Tempo: <span id="time">00:00</span></div>
+                </div>
+                <button id="pause-button" class="control-button pause-button">
+                    <span class="pause-icon">⏸</span>
+                </button>
+            </div>
+            <div id="map-container">
+                <!-- La mappa SVG verrà caricata qui -->
+            </div>
+        </div>
+
+        <div id="game-over">
+            <h2>Gioco Completato!</h2>
+            <div class="stats">
+                <p>Precisione: <span id="accuracy">0</span>%</p>
+                <p>Tempo totale: <span id="total-time">00:00</span></p>
+            </div>
+            <button id="restart-button">Gioca Ancora</button>
+        </div>
+
+        <div id="pause-menu">
+            <div class="pause-content">
+                <h2>Gioco in Pausa</h2>
+                <button id="resume-button" class="control-button">Riprendi</button>
+                <button id="exit-button" class="control-button">Esci</button>
+            </div>
+        </div>
+
+        <div id="feedback-message" class="feedback-message"></div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html> 
