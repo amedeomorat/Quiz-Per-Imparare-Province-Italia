@@ -257,7 +257,7 @@ h1 {
 
 /* Stili delle province */
 .province {
-    fill: #e0e0e0;
+    fill: transparent;
     stroke: #bdbdbd;
     stroke-width: 0.5;
     transition: all 0.3s ease;
@@ -265,49 +265,71 @@ h1 {
 }
 
 .province:hover {
-    fill: #f5f5f5;
+    fill: rgba(245, 245, 245, 0.5);
     stroke: #9e9e9e;
     stroke-width: 1;
     filter: brightness(1.1);
 }
 
 /* Provincia corretta con 3 punti */
-.province.correct[data-points="3"] {
-    fill: #4CAF50;
-    stroke: #388E3C;
-    stroke-width: 1;
-    pointer-events: none;
+#map-container svg .province.correct[data-points="3"] {
+    fill: #4CAF50 !important;
+    stroke: #388E3C !important;
+    stroke-width: 1 !important;
+    pointer-events: none !important;
+    opacity: 1 !important;
 }
 
 /* Provincia corretta con 2 punti */
-.province.correct[data-points="2"] {
-    fill: #ffeb3b;
-    stroke: #fdd835;
-    stroke-width: 1;
-    pointer-events: none;
+#map-container svg .province.correct[data-points="2"] {
+    fill: #FFF9C4 !important;
+    stroke: #FBC02D !important;
+    stroke-width: 1 !important;
+    pointer-events: none !important;
+    opacity: 1 !important;
 }
 
 /* Provincia corretta con 1 punto */
-.province.correct[data-points="1"] {
-    fill: #FF9800;
-    stroke: #F57C00;
-    stroke-width: 1;
-    pointer-events: none;
+#map-container svg .province.correct[data-points="1"] {
+    fill: #FF9800 !important;
+    stroke: #F57C00 !important;
+    stroke-width: 1 !important;
+    pointer-events: none !important;
+    opacity: 1 !important;
 }
 
 /* Provincia sbagliata */
 .province.incorrect {
-    fill: #f44336;
-    stroke: #d32f2f;
+    fill: #ffebee !important;
+    stroke: #f44336 !important;
     stroke-width: 1;
 }
 
 /* Provincia fallita (non indovinata entro 3 tentativi) */
 .province.failed {
-    fill: #f44336;
-    stroke: #d32f2f;
+    fill: #f44336 !important;
+    stroke: #d32f2f !important;
     stroke-width: 1;
     pointer-events: none;
+    animation: failedFlash 2s ease-out forwards;
+}
+
+@keyframes failedFlash {
+    0% {
+        fill: #f44336;
+    }
+    25% {
+        fill: #ffebee;
+    }
+    50% {
+        fill: #f44336;
+    }
+    75% {
+        fill: #ffebee;
+    }
+    100% {
+        fill: #f44336;
+    }
 }
 
 @keyframes flash {

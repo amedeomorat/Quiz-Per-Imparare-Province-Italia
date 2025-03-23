@@ -389,21 +389,21 @@ class ProvinceGame {
     }
 
     handleCorrectGuess(provinceElement) {
+        // Calcola i punti in base ai tentativi rimanenti (fuori dal blocco if)
+        let points;
+        if (this.attempts === 3) {
+            points = 3; // Primo tentativo - Verde
+        } else if (this.attempts === 2) {
+            points = 2; // Secondo tentativo - Giallo
+        } else {
+            points = 1; // Terzo tentativo - Arancione
+        }
+        
         // Verifica che la provincia appartenga a una regione selezionata
         const region = this.getProvinceRegion(this.currentProvince.id);
         if (this.selectedRegions.has(region)) {
             this.currentProvince.solved = true;
             this.solvedProvinces++;
-            
-            // Calcola i punti in base ai tentativi rimanenti
-            let points;
-            if (this.attempts === 3) {
-                points = 3; // Primo tentativo
-            } else if (this.attempts === 2) {
-                points = 2; // Secondo tentativo
-            } else {
-                points = 1; // Terzo tentativo
-            }
             
             this.score += points;
             
@@ -414,8 +414,18 @@ class ProvinceGame {
             console.log(`Provincia indovinata: ${this.currentProvince.name}, Punti ottenuti: ${points}, Punteggio totale: ${this.score}`);
         }
         
-        // Rimuovi eventuali classi precedenti
-        provinceElement.classList.remove('incorrect', 'failed');
+        // Rimuovi tutte le classi incorrect da tutte le province
+        document.querySelectorAll('.province.incorrect').forEach(p => {
+            p.classList.remove('incorrect');
+            p.style.fill = '';
+            p.style.stroke = '';
+        });
+        
+        // Rimuovi tutte le classi precedenti dalla provincia corretta
+        provinceElement.classList.remove('incorrect', 'failed', 'correct');
+        // Rimuovi tutti gli attributi data-points precedenti
+        provinceElement.removeAttribute('data-points');
+        
         // Aggiungi la classe correct e l'attributo data-points
         provinceElement.classList.add('correct');
         provinceElement.setAttribute('data-points', points);
@@ -424,6 +434,24 @@ class ProvinceGame {
         // Forza l'aggiornamento dello stile
         provinceElement.style.fill = '';
         provinceElement.style.stroke = '';
+        provinceElement.style.strokeWidth = '';
+        provinceElement.style.opacity = '1';
+        
+        // Forza un reflow per assicurarsi che gli stili vengano applicati
+        void provinceElement.offsetWidth;
+        
+        // Applica direttamente gli stili in base ai punti
+        console.log("Applicando colore per punti:", points);
+        if (points === 3) {
+            provinceElement.style.fill = '#4CAF50'; // Verde
+            provinceElement.style.stroke = '#388E3C';
+        } else if (points === 2) {
+            provinceElement.style.fill = '#FFF9C4'; // Giallo pastello
+            provinceElement.style.stroke = '#FBC02D';
+        } else {
+            provinceElement.style.fill = '#FF9800'; // Arancione
+            provinceElement.style.stroke = '#F57C00';
+        }
         
         this.selectNextProvince();
     }
@@ -469,8 +497,10 @@ class ProvinceGame {
             
             const correctProvince = document.getElementById(this.currentProvince.id);
             if (correctProvince) {
-                // Rimuovi eventuali classi precedenti
-                correctProvince.classList.remove('correct', 'incorrect');
+                // Rimuovi tutte le classi precedenti
+                correctProvince.classList.remove('correct', 'incorrect', 'failed');
+                correctProvince.removeAttribute('data-points');
+                // Aggiungi la classe failed
                 correctProvince.classList.add('failed');
                 correctProvince.style.pointerEvents = 'none';
                 // Forza l'aggiornamento dello stile
@@ -480,8 +510,9 @@ class ProvinceGame {
             }
             this.selectNextProvince();
         } else {
-            // Rimuovi eventuali classi precedenti
-            provinceElement.classList.remove('correct', 'failed');
+            // Rimuovi tutte le classi precedenti
+            provinceElement.classList.remove('correct', 'failed', 'incorrect');
+            provinceElement.removeAttribute('data-points');
             // Aggiungi la classe incorrect
             provinceElement.classList.add('incorrect');
             // Forza l'aggiornamento dello stile
@@ -674,6 +705,23 @@ class ProvinceGame {
         this.regionSelector.classList.remove('hidden');
         this.header.classList.remove('hidden');
         this.resetGame();
+    }
+
+    setupProvinceEvents() {
+        document.querySelectorAll('.province').forEach(province => {
+            province.addEventListener('click', (e) => {
+                if (this.isPaused) return;
+                
+                const clickedProvince = this.provinces.find(p => p.id === province.id);
+                if (!clickedProvince) return;
+                
+                if (clickedProvince.id === this.currentProvince.id) {
+                    this.handleCorrectGuess(province);
+                } else {
+                    this.handleIncorrectGuess(province);
+                }
+            });
+        });
     }
 }
 
