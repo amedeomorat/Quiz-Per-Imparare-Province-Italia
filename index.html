@@ -46,19 +46,21 @@
             </div>
         </div>
 
-        <div class="game-container">
-            <div class="game-header">
-                <div class="game-info">
-                    <div>Provincia da indovinare: <span id="province-name"></span></div>
-                    <div>Tentativi rimasti: <span id="attempts-count">3</span></div>
-                    <div>Tempo: <span id="time">00:00</span></div>
+        <div id="game-interface">
+            <div class="game-container">
+                <div class="game-header">
+                    <div class="game-info">
+                        <div>Provincia da indovinare: <span id="province-name"></span></div>
+                        <div>Tentativi rimasti: <span id="attempts-count">3</span></div>
+                        <div>Tempo: <span id="time">00:00</span></div>
+                    </div>
+                    <button id="pause-button" class="control-button pause-button">
+                        <span class="pause-icon">⏸</span>
+                    </button>
                 </div>
-                <button id="pause-button" class="control-button pause-button">
-                    <span class="pause-icon">⏸</span>
-                </button>
-            </div>
-            <div id="map-container">
-                <!-- La mappa SVG verrà caricata qui -->
+                <div id="map-container">
+                    <!-- La mappa SVG verrà caricata qui -->
+                </div>
             </div>
         </div>
 

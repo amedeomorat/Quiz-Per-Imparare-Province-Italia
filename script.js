@@ -27,6 +27,7 @@ class ProvinceGame {
         this.pauseMenu = document.getElementById('pause-menu');
         this.resumeButton = document.getElementById('resume-button');
         this.exitButton = document.getElementById('exit-button');
+        this.gameInterface = document.getElementById('game-interface');
         this.selectedRegions = new Set();
         this.zoomLevel = 1;
         this.panOffset = { x: 0, y: 0 };
@@ -39,6 +40,13 @@ class ProvinceGame {
         this.scoreElement = document.createElement('div');
         this.scoreElement.className = 'score-display';
         this.header.appendChild(this.scoreElement);
+
+        // Nascondi l'intera interfaccia di gioco all'inizio
+        if (this.gameInterface) {
+            this.gameInterface.style.display = 'none';
+        } else {
+            console.warn('Elemento gameInterface non trovato');
+        }
 
         this.init();
     }
@@ -107,27 +115,29 @@ class ProvinceGame {
         const viewBox = svg.getAttribute('viewBox');
         if (!viewBox) return;
 
-        const [, , width, height] = viewBox.split(' ').map(Number);
+        const [vx, vy, width, height] = viewBox.split(' ').map(Number);
         
         // Calcola le dimensioni del contenitore
-        const containerWidth = this.mapContainer.clientWidth - 24;
-        const containerHeight = this.mapContainer.clientHeight - 24;
+        const containerWidth = this.mapContainer.clientWidth - 20;
+        const containerHeight = this.mapContainer.clientHeight - 20;
 
         // Calcola lo zoom necessario
         const scaleX = containerWidth / width;
         const scaleY = containerHeight / height;
         
-        // Imposta uno zoom iniziale ottimale
-        this.zoomLevel = Math.min(scaleX, scaleY) * 2; // Aumentato a 2 per una mappa più grande
+        // Imposta uno zoom iniziale ottimale (ridotto per evitare zoom eccessivo)
+        this.zoomLevel = Math.min(scaleX, scaleY) * 1.2; // Ridotto a 1.2 per una mappa più bilanciata
 
-        // Centra la mappa
+        // Migliora il posizionamento per evitare lo zoom in basso
         this.panOffset = {
             x: (containerWidth - width * this.zoomLevel) / 2,
-            y: (containerHeight - height * this.zoomLevel) / 2
+            y: (containerHeight - height * this.zoomLevel) / 2 - (height * 0.1 * this.zoomLevel)
         };
 
         // Applica la trasformazione
         this.updateMapTransform();
+        
+        console.log("Zoom iniziale applicato:", this.zoomLevel, "Container:", containerWidth, containerHeight, "Offset:", this.panOffset);
     }
 
     addEventListeners() {
@@ -139,6 +149,10 @@ class ProvinceGame {
             // Mostra il selettore delle regioni
             this.regionSelector.classList.remove('hidden');
             this.header.classList.remove('hidden');
+            // Assicurati che l'intera interfaccia di gioco rimanga nascosta
+            if (this.gameInterface) {
+                this.gameInterface.style.display = 'none';
+            }
         });
         this.mapContainer.addEventListener('click', (e) => this.handleMapClick(e));
         this.applyRegionsButton.addEventListener('click', () => this.applyRegionSelection());
@@ -162,6 +176,18 @@ class ProvinceGame {
         this.mapContainer.addEventListener('touchstart', (e) => this.startDragging(e.touches[0]));
         this.mapContainer.addEventListener('touchmove', (e) => this.drag(e.touches[0]));
         this.mapContainer.addEventListener('touchend', () => this.stopDragging());
+        
+        // Aggiungi un event listener per il ridimensionamento della finestra
+        window.addEventListener('resize', () => {
+            if (this.gameInterface && this.gameInterface.style.display !== 'none') {
+                // Se il gioco è visibile, ricalcola lo zoom
+                clearTimeout(this.resizeTimeout);
+                this.resizeTimeout = setTimeout(() => {
+                    console.log("Ridimensionamento rilevato");
+                    this.improveZoom();
+                }, 300);
+            }
+        });
     }
 
     startGame() {
@@ -170,6 +196,16 @@ class ProvinceGame {
             this.showFeedback('Seleziona almeno una regione per iniziare il gioco', false);
             return;
         }
+        
+        // Ferma il timer esistente se è attivo
+        if (this.timer) {
+            clearInterval(this.timer);
+            this.timer = null;
+        }
+        
+        // Reset del conteggio del tempo
+        this.startTime = Date.now();
+        this.timeElement.textContent = '00:00';
         
         // Calcola il punteggio massimo possibile
         const totalProvinces = this.provinces.filter(p => {
@@ -181,6 +217,22 @@ class ProvinceGame {
         // Reset del punteggio
         this.score = 0;
         
+        // Reset delle province: ripulisci tutte le province dalla colorazione precedente
+        document.querySelectorAll('.province').forEach(province => {
+            province.classList.remove('correct', 'incorrect', 'failed', 'attempt-1', 'attempt-2', 'attempt-3');
+            province.removeAttribute('data-points');
+            province.style.fill = '';
+            province.style.stroke = '';
+            province.style.strokeWidth = '';
+            province.style.pointerEvents = 'auto';
+            province.style.opacity = '1';
+        });
+        
+        // Reset dello stato delle province
+        this.provinces.forEach(province => {
+            province.solved = false;
+        });
+        
         // Nascondi il selettore delle regioni e il titolo
         this.regionSelector.classList.add('hidden');
         this.header.classList.add('hidden');
@@ -189,17 +241,33 @@ class ProvinceGame {
         this.pauseButton.style.display = 'flex';
         this.pauseButton.querySelector('.pause-icon').textContent = '⏸';
         
+        // Mostra l'intera interfaccia di gioco
+        if (this.gameInterface) {
+            this.gameInterface.style.display = 'flex';
+        }
+        
         this.resetGame();
         this.startTimer();
         this.selectNextProvince();
+        
+        // Assicuriamoci che la mappa sia visibile e ottimizzata
+        setTimeout(() => {
+            // Usa improveZoom per un miglior adattamento della mappa
+            this.improveZoom();
+        }, 300);
     }
 
     resetGame() {
         this.attempts = 3;
         this.solvedProvinces = 0;
-        this.startTime = Date.now();
+        
+        // Non modifichiamo qui lo startTime perché è già gestito in startGame
+        
         this.gameOverElement.classList.add('hidden');
         
+        // Il reset delle province è già gestito in startGame
+        // quindi commentiamo questa parte
+        /*
         // Reset dei colori delle province
         document.querySelectorAll('.province').forEach(province => {
             province.classList.remove('attempt-1', 'attempt-2', 'attempt-3', 'failed', 'incorrect');
@@ -210,19 +278,29 @@ class ProvinceGame {
         this.provinces.forEach(province => {
             province.solved = false;
         });
+        */
         
         this.updateUI();
     }
 
     startTimer() {
+        // Assicurati che non ci siano timer attivi
+        if (this.timer) {
+            clearInterval(this.timer);
+        }
+        
+        // Imposta il tempo iniziale
+        this.startTime = Date.now();
+        
         this.timer = setInterval(() => {
-            if (!this.isPaused) {
-                const elapsed = Math.floor((Date.now() - this.startTime) / 1000);
-                const minutes = Math.floor(elapsed / 60);
-                const seconds = elapsed % 60;
-                this.timeElement.textContent = 
-                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-            }
+            if (this.isPaused) return;
+            
+            const elapsedTime = Math.floor((Date.now() - this.startTime) / 1000);
+            const minutes = Math.floor(elapsedTime / 60);
+            const seconds = elapsedTime % 60;
+            
+            this.timeElement.textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
         }, 1000);
     }
 
@@ -264,24 +342,22 @@ class ProvinceGame {
         const [, , width, height] = viewBox.split(' ').map(Number);
         
         // Calcola le dimensioni del contenitore
-        const containerWidth = this.mapContainer.clientWidth - 24; // Ridotto il padding
-        const containerHeight = this.mapContainer.clientHeight - 24;
+        const containerWidth = this.mapContainer.clientWidth - 20;
+        const containerHeight = this.mapContainer.clientHeight - 20;
 
-        // Calcola lo zoom necessario
-        const scaleX = containerWidth / width;
-        const scaleY = containerHeight / height;
-        
-        // Usa il fattore di scala più piccolo per assicurarsi che la mappa sia completamente visibile
-        this.zoomLevel = Math.min(scaleX, scaleY) * 1.1 // Ridotto a 110% per un po' di margine
-
+        // Usa un fattore di scala maggiore per ottenere una mappa più grande
+        this.zoomLevel = Math.min(containerWidth / width, containerHeight / height) * 1.5;
+            
         // Centra la mappa
         this.panOffset = {
             x: (containerWidth - width * this.zoomLevel) / 2,
             y: (containerHeight - height * this.zoomLevel) / 2
         };
-
+        
         // Applica la trasformazione
         this.updateMapTransform();
+        
+        console.log("Auto zoom applicato:", this.zoomLevel, "Container:", containerWidth, containerHeight);
     }
 
     updateMapTransform() {
@@ -302,6 +378,8 @@ class ProvinceGame {
             }
         });
 
+        console.log("Regioni selezionate:", Array.from(this.selectedRegions));
+
         // Nascondi/mostra le province in base alle regioni selezionate
         document.querySelectorAll('.province').forEach(province => {
             const region = this.getProvinceRegion(province.id);
@@ -316,9 +394,10 @@ class ProvinceGame {
         this.resetGame();
         
         // Aspetta che il DOM sia aggiornato prima di fare l'auto-zoom
-        requestAnimationFrame(() => {
-            this.autoZoom();
-        });
+        setTimeout(() => {
+            this.improveZoom();
+            console.log("Zoom migliorato applicato dopo la selezione delle regioni");
+        }, 300);
     }
 
     selectNextProvince() {
@@ -575,6 +654,12 @@ class ProvinceGame {
             this.pauseButton.style.display = 'none';
             this.regionSelector.classList.remove('hidden');
             this.header.classList.remove('hidden');
+            
+            // Nascondi l'intera interfaccia di gioco quando il gioco finisce
+            if (this.gameInterface) {
+                this.gameInterface.style.display = 'none';
+            }
+            
             return;
         }
         
@@ -598,6 +683,11 @@ class ProvinceGame {
         this.pauseButton.style.display = 'none';
         this.regionSelector.classList.remove('hidden');
         this.header.classList.remove('hidden');
+        
+        // Nascondi l'intera interfaccia di gioco quando il gioco finisce
+        if (this.gameInterface) {
+            this.gameInterface.style.display = 'none';
+        }
 
         // Reset delle province risolte
         this.provinces.forEach(province => {
@@ -704,6 +794,12 @@ class ProvinceGame {
         this.pauseButton.style.display = 'none';
         this.regionSelector.classList.remove('hidden');
         this.header.classList.remove('hidden');
+        
+        // Nascondi l'intera interfaccia di gioco quando si esce dal gioco
+        if (this.gameInterface) {
+            this.gameInterface.style.display = 'none';
+        }
+        
         this.resetGame();
     }
 
@@ -722,6 +818,37 @@ class ProvinceGame {
                 }
             });
         });
+    }
+
+    improveZoom() {
+        const svg = this.mapContainer.querySelector('svg');
+        if (!svg) return;
+
+        // Ottieni le dimensioni originali della mappa
+        const viewBox = svg.getAttribute('viewBox');
+        if (!viewBox) return;
+
+        const [vx, vy, width, height] = viewBox.split(' ').map(Number);
+        
+        // Calcola le dimensioni del contenitore
+        const containerWidth = this.mapContainer.clientWidth;
+        const containerHeight = this.mapContainer.clientHeight;
+
+        console.log("Dimensioni container effettive:", containerWidth, containerHeight);
+        
+        // Usa un fattore di scala più bilanciato
+        this.zoomLevel = Math.min(containerWidth / width, containerHeight / height) * 2.0;
+            
+        // Spostamento a destra e un po' in basso (meno di prima)
+        this.panOffset = {
+            x: (containerWidth - width * this.zoomLevel) / 2 + (width * 0.10 * this.zoomLevel),
+            y: (containerHeight - height * this.zoomLevel) / 2 + (height * 0.275 * this.zoomLevel)
+        };
+        
+        // Applica la trasformazione
+        this.updateMapTransform();
+        
+        console.log("Zoom migliorato applicato:", this.zoomLevel, "Offset:", this.panOffset);
     }
 }
 
